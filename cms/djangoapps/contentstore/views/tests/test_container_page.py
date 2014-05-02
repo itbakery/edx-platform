@@ -1,27 +1,20 @@
 """
-Unit tests for the container view.
+Unit tests for the container page.
 """
 
-import json
-
-from contentstore.tests.utils import CourseTestCase
 from contentstore.utils import compute_publish_state, PublishState
-from contentstore.views.helpers import xblock_studio_url
-from xmodule.modulestore.django import loc_mapper, modulestore
+from contentstore.views.tests.utils import StudioPageTestCase
+from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.tests.factories import ItemFactory
 
 
-class ContainerViewTestCase(CourseTestCase):
+class ContainerPageTestCase(StudioPageTestCase):
     """
-    Unit tests for the container view.
+    Unit tests for the container page.
     """
 
     def setUp(self):
-        super(ContainerViewTestCase, self).setUp()
-        self.chapter = ItemFactory.create(parent_location=self.course.location,
-                                          category='chapter', display_name="Week 1")
-        self.sequential = ItemFactory.create(parent_location=self.chapter.location,
-                                             category='sequential', display_name="Lesson 1")
+        super(ContainerPageTestCase, self).setUp()
         self.vertical = ItemFactory.create(parent_location=self.sequential.location,
                                            category='vertical', display_name='Unit')
         self.child_vertical = ItemFactory.create(parent_location=self.vertical.location,
@@ -35,7 +28,7 @@ class ContainerViewTestCase(CourseTestCase):
             self.child_vertical,
             branch_name=branch_name,
             expected_section_tag=(
-                '<section class="wrapper-xblock level-page is-hidden" '
+                '<section class="wrapper-xblock level-page is-hidden studio-xblock-wrapper" '
                 'data-locator="{branch_name}/Child_Vertical">'.format(branch_name=branch_name)
             ),
             expected_breadcrumbs=(
@@ -50,20 +43,20 @@ class ContainerViewTestCase(CourseTestCase):
         Create the scenario of an xblock with children (non-vertical) on the container page.
         This should create a container page that is a child of another container page.
         """
-        published_xblock_with_child = ItemFactory.create(
+        published_container = ItemFactory.create(
             parent_location=self.child_vertical.location,
             category="wrapper", display_name="Wrapper"
         )
         ItemFactory.create(
-            parent_location=published_xblock_with_child.location,
+            parent_location=published_container.location,
             category="html", display_name="Child HTML"
         )
         branch_name = "MITx.999.Robot_Super_Course/branch/draft/block"
         self._test_html_content(
-            published_xblock_with_child,
+            published_container,
             branch_name=branch_name,
             expected_section_tag=(
-                '<section class="wrapper-xblock level-page is-hidden" '
+                '<section class="wrapper-xblock level-page is-hidden studio-xblock-wrapper" '
                 'data-locator="{branch_name}/Wrapper">'.format(branch_name=branch_name)
             ),
             expected_breadcrumbs=(
@@ -78,12 +71,12 @@ class ContainerViewTestCase(CourseTestCase):
         # Now make the unit and its children into a draft and validate the container again
         modulestore('draft').convert_to_draft(self.vertical.location)
         modulestore('draft').convert_to_draft(self.child_vertical.location)
-        draft_xblock_with_child = modulestore('draft').convert_to_draft(published_xblock_with_child.location)
+        draft_container = modulestore('draft').convert_to_draft(published_container.location)
         self._test_html_content(
-            draft_xblock_with_child,
+            draft_container,
             branch_name=branch_name,
             expected_section_tag=(
-                '<section class="wrapper-xblock level-page is-hidden" '
+                '<section class="wrapper-xblock level-page is-hidden studio-xblock-wrapper" '
                 'data-locator="{branch_name}/Wrapper">'.format(branch_name=branch_name)
             ),
             expected_breadcrumbs=(
@@ -100,14 +93,12 @@ class ContainerViewTestCase(CourseTestCase):
         Get the HTML for a container page and verify the section tag is correct
         and the breadcrumbs trail is correct.
         """
-        url = xblock_studio_url(xblock, self.course)
+        html = self.get_page_html(xblock)
         publish_state = compute_publish_state(xblock)
-        resp = self.client.get_html(url)
-        self.assertEqual(resp.status_code, 200)
-        html = resp.content
         self.assertIn(expected_section_tag, html)
         # Verify the navigation link at the top of the page is correct.
         self.assertRegexpMatches(html, expected_breadcrumbs)
+
         # Verify the link that allows users to change publish status.
         expected_message = None
         if publish_state == PublishState.public:
@@ -119,36 +110,18 @@ class ContainerViewTestCase(CourseTestCase):
         )
         self.assertIn(expected_unit_link, html)
 
-    def test_container_preview_html(self):
+    def test_public_container_preview_html(self):
         """
-        Verify that an xblock returns the expected HTML for a container preview
+        Verify that a public xblock's container preview returns the expected HTML.
         """
-        # First verify that the behavior is correct with a published container
-        self._test_preview_html(self.vertical)
-        self._test_preview_html(self.child_vertical)
+        self.validate_preview_html(self.vertical, 'container_preview', is_editable=False, can_add=False)
+        self.validate_preview_html(self.child_vertical, 'container_child_preview', is_editable=False, can_add=False)
 
-        # Now make the unit and its children into a draft and validate the preview again
+    def test_draft_container_preview_html(self):
+        """
+        Verify that a draft xblock's container preview returns the expected HTML.
+        """
         draft_unit = modulestore('draft').convert_to_draft(self.vertical.location)
         draft_container = modulestore('draft').convert_to_draft(self.child_vertical.location)
-        self._test_preview_html(draft_unit)
-        self._test_preview_html(draft_container)
-
-    def _test_preview_html(self, xblock):
-        """
-        Verify that the specified xblock has the expected HTML elements for container preview
-        """
-        locator = loc_mapper().translate_location(self.course.id, xblock.location, published=False)
-        publish_state = compute_publish_state(xblock)
-        preview_url = '/xblock/{locator}/container_preview'.format(locator=locator)
-
-        resp = self.client.get(preview_url, HTTP_ACCEPT='application/json')
-        self.assertEqual(resp.status_code, 200)
-        resp_content = json.loads(resp.content)
-        html = resp_content['html']
-
-        # Verify that there are no drag handles for public pages
-        drag_handle_html = '<span data-tooltip="Drag to reorder" class="drag-handle action"></span>'
-        if publish_state == PublishState.public:
-            self.assertNotIn(drag_handle_html, html)
-        else:
-            self.assertIn(drag_handle_html, html)
+        self.validate_preview_html(draft_unit, 'container_preview')
+        self.validate_preview_html(draft_container, 'container_child_preview')
