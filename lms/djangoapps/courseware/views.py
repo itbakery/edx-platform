@@ -591,8 +591,15 @@ def course_about(request, course_id):
         reg_then_add_to_cart_link = "{reg_url}?course_id={course_id}&enrollment_action=add_to_cart".format(
             reg_url=reverse('register_user'), course_id=course.id)
 
+    # If enrollment disallowed, use these to display message to student that has the correct context.
+    can_enroll = has_access(request.user, course, 'enroll')
+    invitation_only = course.invitation_only
+
     # see if we have already filled up all allowed enrollments
     is_course_full = CourseEnrollment.is_course_full(course)
+
+    # If enrollment disallowed, for whatever reason, don't include the form and submit button.
+    active_reg_button = not(registered or is_course_full or invitation_only or not can_enroll)
 
     return render_to_response('courseware/course_about.html', {
         'course': course,
@@ -604,7 +611,10 @@ def course_about(request, course_id):
         'in_cart': in_cart,
         'reg_then_add_to_cart_link': reg_then_add_to_cart_link,
         'show_courseware_link': show_courseware_link,
-        'is_course_full': is_course_full
+        'is_course_full': is_course_full,
+        'can_enroll': can_enroll,
+        'invitation_only': invitation_only,
+        'active_reg_button': active_reg_button,
     })
 
 

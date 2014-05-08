@@ -2,6 +2,8 @@
 Test the about xblock
 """
 import mock
+import pytz
+import datetime
 from django.test.utils import override_settings
 from django.core.urlresolvers import reverse
 
@@ -32,6 +34,9 @@ class AboutTestCase(LoginEnrollmentTestCase, ModuleStoreTestCase):
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 200)
         self.assertIn("OOGIE BLOOGIE", resp.content)
+
+        # Check that registration button is present
+        self.assertIn("<form id=\"class_enroll_form\" method=\"post\" data-remote=\"true\" action=\"/change_enrollment\">", resp.content)
 
 
 @override_settings(MODULESTORE=TEST_DATA_MIXED_MODULESTORE)
@@ -106,3 +111,66 @@ class AboutWithCappedEnrollmentsTestCase(LoginEnrollmentTestCase, ModuleStoreTes
         # Try to enroll as well
         result = self.enroll(self.course)
         self.assertFalse(result)
+
+        # Check that registration button is not present
+        self.assertNotIn("<form id=\"class_enroll_form\" method=\"post\" data-remote=\"true\" action=\"/change_enrollment\">", resp.content)
+
+
+@override_settings(MODULESTORE=TEST_DATA_MIXED_MODULESTORE)
+class AboutWithInvitationOnly(ModuleStoreTestCase):
+    """
+    This test case will check the About page when a course is invitation only.
+    """
+    def setUp(self):
+
+        self.course = CourseFactory.create(metadata={"invitation_only": True})
+
+        self.about = ItemFactory.create(
+            category="about", parent_location=self.course.location,
+            display_name="overview"
+        )
+
+    def test_invitation_only(self):
+
+        url = reverse('about_course', args=[self.course.id])
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("Enrollment in this course is by invitation only", resp.content)
+
+        # Check that registration button is not present
+        self.assertNotIn("<form id=\"class_enroll_form\" method=\"post\" data-remote=\"true\" action=\"/change_enrollment\">", resp.content)
+
+
+@override_settings(MODULESTORE=TEST_DATA_MIXED_MODULESTORE)
+class AboutWithClosedEnrollment(ModuleStoreTestCase):
+    """
+    This test case will check the About page for a course that has enrollment start/end
+    set but it is currently outside of that period.
+    """
+    def setUp(self):
+
+        self.course = CourseFactory.create()
+
+        # Setup enrollment period to be in future
+        now = datetime.datetime.now(pytz.UTC)
+        tomorrow = now + datetime.timedelta(days=1)
+        nextday = tomorrow + datetime.timedelta(days=1)
+
+        self.course.enrollment_start = tomorrow
+        self.course.enrollment_end = nextday
+        self.course = self.update_course(self.course)
+
+        self.about = ItemFactory.create(
+            category="about", parent_location=self.course.location,
+            display_name="overview"
+        )
+
+    def test_closed_enrollmement(self):
+
+        url = reverse('about_course', args=[self.course.id])
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("Open Enrollment is Closed", resp.content)
+
+        # Check that registration button is not present
+        self.assertNotIn("<form id=\"class_enroll_form\" method=\"post\" data-remote=\"true\" action=\"/change_enrollment\">", resp.content)
