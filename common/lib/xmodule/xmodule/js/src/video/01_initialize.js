@@ -277,7 +277,16 @@ function (VideoPlayer, VideoStorage) {
     }
 
     function _supportsHTML5Video() {
-        return !!document.createElement('video').canPlayType;
+        var video = document.createElement('video');
+
+        // First check if video tag is supported by browser.
+        // Then if one of the supported format (mp4, ogg, webm) is enabled ie
+        // that it  doesn't return an empty string.
+        // http://www.w3schools.com/tags/av_met_canplaytype.asp
+        return !!video.canPlayType ? video.canPlayType('video/mp4') !== '' ||
+                                     video.canPlayType('video/ogg') !== '' ||
+                                     video.canPlayType('video/webm') !== ''
+                                   : false;
     }
 
     // function _prepareHTML5Video(state)
