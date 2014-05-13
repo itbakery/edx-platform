@@ -4,6 +4,7 @@ import os
 import errno
 from .utils.envs import Env
 
+
 @task
 @cmdopts([
     ("system=", "s", "System to act on"),
@@ -68,16 +69,16 @@ def run_quality(options):
     """
     Build the html diff quality reports, and print the reports to the console.
     """
-        
-    # Directory to put the diff reports in. 
-    # This makes the folder if it doesn't already exist. 
-    dquality_dir =  os.path.join(Env.REPORT_DIR, "diff_quality")
-    
-    try: 
+
+    # Directory to put the diff reports in.
+    # This makes the folder if it doesn't already exist.
+    dquality_dir = os.path.join(Env.REPORT_DIR, "diff_quality")
+
+    try:
         os.makedirs(dquality_dir)
     except OSError as e:
         if e.errno != errno.EEXIST:
-            raise 
+            raise
 
     # Generage diff-quality html report for pep8, and print to console
     # If pep8 reports exist, use those
@@ -85,9 +86,9 @@ def run_quality(options):
 
     pep8_files = []
     for subdir, dirs, files in os.walk(os.path.join(Env.REPORT_DIR)):
-        for file in files:
-            if file == "pep8.report":
-                pep8_files.append(os.path.join(subdir, file))
+        for f in files:
+            if f == "pep8.report":
+                pep8_files.append(os.path.join(subdir, f))
 
     pep8_reports = ' '.join(pep8_files)
     sh("diff-quality --violations=pep8 --html-report {dquality_dir}/diff_quality_pep8.html {pep8_reports}".format(
@@ -100,9 +101,9 @@ def run_quality(options):
 
     pylint_files = []
     for subdir, dirs, files in os.walk(os.path.join(Env.REPORT_DIR)):
-        for file in files:
-            if file == "pylint.report":
-                pylint_files.append(os.path.join(subdir, file))
+        for f in files:
+            if f == "pylint.report":
+                pylint_files.append(os.path.join(subdir, f))
 
     pylint_reports = ' '.join(pylint_files)
     pythonpath_prefix = "PYTHONPATH=$PYTHONPATH:lms:lms/djangoapps:lms/lib:cms:cms/djangoapps:cms/lib:common:common/djangoapps:common/lib"
