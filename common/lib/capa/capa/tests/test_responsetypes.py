@@ -20,6 +20,7 @@ from capa.responsetypes import LoncapaProblemError, \
     StudentInputError, ResponseError
 from capa.correctmap import CorrectMap
 from capa.util import convert_files_to_filenames
+from capa.util import compare_with_tolerance
 from capa.xqueue_interface import dateformat
 
 from pytz import UTC
@@ -1120,6 +1121,45 @@ class NumericalResponseTest(ResponseTest):
     # We blend the line between integration (using evaluator) and exclusively
     # unit testing the NumericalResponse (mocking out the evaluator)
     # For simple things its not worth the effort.
+
+    def test_compare_with_tolerance(self):
+        # Test default tolerance '0.001%' (it is relative)
+        result = compare_with_tolerance(100.0, 100.0)
+        self.assertTrue(result)
+        result = compare_with_tolerance(100.001, 100.0)
+        self.assertTrue(result)
+        result = compare_with_tolerance(101.0, 100.0)
+        self.assertFalse(result)
+        # Test absolute percentage tolerance
+        result = compare_with_tolerance(109.9, 100.0, '10%', False)
+        self.assertTrue(result)
+        result = compare_with_tolerance(110.1, 100.0, '10%', False)
+        self.assertFalse(result)
+        # Test relative percentage tolerance
+        result = compare_with_tolerance(111.0, 100.0, '10%', True)
+        self.assertTrue(result)
+        result = compare_with_tolerance(112.0, 100.0, '10%', True)
+        self.assertFalse(result)
+        # Test absolute tolerance (string)
+        result = compare_with_tolerance(109.9, 100.0, '10.0', False)
+        self.assertTrue(result)
+        result = compare_with_tolerance(110.1, 100.0, '10.0', False)
+        self.assertFalse(result)
+         # Test relative tolerance (string)
+        result = compare_with_tolerance(111.0, 100.0, '0.1', True)
+        self.assertTrue(result)
+        result = compare_with_tolerance(112.0, 100.0, '0.1', True)
+        self.assertFalse(result)
+        # Test absolute tolerance (float)
+        result = compare_with_tolerance(109.9, 100.0, 10.0, False)
+        self.assertTrue(result)
+        result = compare_with_tolerance(110.1, 100.0, 10.0, False)
+        self.assertFalse(result)
+         # Test relative tolerance (float)
+        result = compare_with_tolerance(111.0, 100.0, 0.1, True)
+        self.assertTrue(result)
+        result = compare_with_tolerance(112.0, 100.0, 0.1, True)
+        self.assertFalse(result)
 
     def test_grade_range_tolerance(self):
         problem_setup = [
