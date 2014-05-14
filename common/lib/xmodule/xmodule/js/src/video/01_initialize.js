@@ -276,33 +276,10 @@ function (VideoPlayer, VideoStorage) {
         return false;
     }
 
-    function _supportsHTML5Video() {
-        var video = document.createElement('video');
-
-        // First check if video tag is supported by browser.
-        // Then if one of the supported format (mp4, ogg, webm) is enabled ie
-        // that it  doesn't return an empty string.
-        // http://www.w3schools.com/tags/av_met_canplaytype.asp
-        return !!video.canPlayType ? video.canPlayType('video/mp4') !== '' ||
-                                     video.canPlayType('video/ogg') !== '' ||
-                                     video.canPlayType('video/webm') !== ''
-                                   : false;
-    }
-
     // function _prepareHTML5Video(state)
     // The function prepare HTML5 video, parse HTML5
     // video sources etc.
     function _prepareHTML5Video(state) {
-
-        if (!_supportsHTML5Video()) {
-            state.el.find('.video-player div').addClass('hidden');
-            state.el.find('.video-player h3').first().removeClass('hidden');
-
-            console.log('[Video info]: HTML5 Video API is not supported.');
-
-            return false;
-        }
-
         state.parseVideoSources(
             {
                 mp4: state.config.mp4Source,
@@ -323,7 +300,8 @@ function (VideoPlayer, VideoStorage) {
 
             // TODO: use 1 class to work with.
             state.el.find('.video-player div').addClass('hidden');
-            state.el.find('.video-player h3').last().removeClass('hidden');
+            state.el.find('.video-player h3').removeClass('hidden');
+            _hideWaitPlaceholder(state);
 
             console.log(
                 '[Video info]: Non-youtube video sources aren\'t available.'
@@ -676,7 +654,10 @@ function (VideoPlayer, VideoStorage) {
                 mp4: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"',
                 webm: 'video/webm; codecs="vp8, vorbis"',
                 ogg: 'video/ogg; codecs="theora"'
-            };
+            },
+            canPlayHTML5Video = false;
+        v.innerHTML = 'This browser cannot play .mp4, .ogg, or .webm files.' +
+                      ' Try using a different browser, such as Google Chrome.';
 
         this.html5Sources = {
             mp4: null,
@@ -693,9 +674,18 @@ function (VideoPlayer, VideoStorage) {
                     )
                 ) {
                     _this.html5Sources[name] = source;
+                    canPlayHTML5Video = true;
                 }
             }
         });
+
+        if (!canPlayHTML5Video) {
+            console.log(
+                '[Video info]: This browser cannot play .mp4, .ogg, or .webm ' +
+                'files'
+            );
+            _hideWaitPlaceholder(state);
+        }
     }
 
     // function fetchMetadata()
