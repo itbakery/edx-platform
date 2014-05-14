@@ -9,14 +9,12 @@ default_tolerance = '0.001%'
 
 def compare_with_tolerance(student_complex, instructor_complex, tolerance=default_tolerance, relative_tolerance=False):
     """
-    Compare student_complex to instructor_complex with maximum tolerance tol.
-
-    If tolerance is type string, then it is counted as relative if it ends in %; otherwise, it is absolute.
+    Compare student_complex to instructor_complex with maximum tolerance tolerance.
 
      - student_complex    :  student result (float complex number)
      - instructor_complex    :  instructor result (float complex number)
-     - tolerance   :  string representing a number or float
-     - relative_tolerance: bool, used when`tolerance` is float to explicitly use passed tolerance as relative.
+     - tolerance   :  float, or string (representing a float or a percentage)
+     - relative_tolerance: bool, to explicitly use passed tolerance as relative
 
      Default tolerance of 1e-3% is added to compare two floats for
      near-equality (to handle machine representation errors).
