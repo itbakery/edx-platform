@@ -581,7 +581,7 @@ class Html5VideoTest(VideoBaseTest):
         self.assertIn(correct_error_message_text, self.video.error_message_text)
 
         # Verify that spinner is not shown
-        self.assertFalse(self.video.is_spinner_shown)
+        self.assertFalse(self.video.is_spinner_shown())
 
     def test_download_button_wo_english_transcript(self):
         """

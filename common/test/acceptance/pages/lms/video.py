@@ -217,7 +217,6 @@ class VideoPage(PageObject):
         selector = self.get_element_selector(video_display_name, CSS_CLASS_NAMES['error_message'])
         return self.q(css=selector).visible
 
-    @property
     def is_spinner_shown(self, video_display_name=None):
         """
         Checks if video spinner shown.
