@@ -654,10 +654,7 @@ function (VideoPlayer, VideoStorage) {
                 mp4: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"',
                 webm: 'video/webm; codecs="vp8, vorbis"',
                 ogg: 'video/ogg; codecs="theora"'
-            },
-            canPlayHTML5Video = false;
-        v.innerHTML = 'This browser cannot play .mp4, .ogg, or .webm files.' +
-                      ' Try using a different browser, such as Google Chrome.';
+            };
 
         this.html5Sources = {
             mp4: null,
@@ -674,17 +671,17 @@ function (VideoPlayer, VideoStorage) {
                     )
                 ) {
                     _this.html5Sources[name] = source;
-                    canPlayHTML5Video = true;
                 }
             }
         });
 
-        if (!canPlayHTML5Video) {
+        // None of the supported video formats can be played. Hide the spinner.
+        if (!(_.compact(_.values(this.html5Sources)))) {
+            _hideWaitPlaceholder(state);
             console.log(
                 '[Video info]: This browser cannot play .mp4, .ogg, or .webm ' +
                 'files'
             );
-            _hideWaitPlaceholder(state);
         }
     }
 
