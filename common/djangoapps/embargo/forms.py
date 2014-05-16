@@ -11,7 +11,7 @@ import socket
 
 from xmodule.modulestore.django import modulestore
 from opaque_keys import InvalidKeyError
-from xmodule.modulestore.locations import SlashSeparatedCourseKey
+from opaque_keys.locations import SlashSeparatedCourseKey
 
 
 class EmbargoedCourseForm(forms.ModelForm):  # pylint: disable=incomplete-protocol

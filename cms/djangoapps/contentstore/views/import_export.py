@@ -27,7 +27,7 @@ from xmodule.modulestore.xml_importer import import_from_xml
 from xmodule.contentstore.django import contentstore
 from xmodule.modulestore.xml_exporter import export_to_xml
 from xmodule.modulestore.django import modulestore
-from xmodule.modulestore.keys import CourseKey
+from opaque_keys.keys import CourseKey
 from xmodule.exceptions import SerializationError
 
 from .access import has_course_access

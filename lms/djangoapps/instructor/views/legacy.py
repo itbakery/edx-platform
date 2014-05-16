@@ -30,10 +30,10 @@ from xmodule_modifiers import wrap_xblock
 import xmodule.graders as xmgraders
 from xmodule.modulestore import XML_MODULESTORE_TYPE
 from xmodule.modulestore.django import modulestore
-from xmodule.modulestore.locations import SlashSeparatedCourseKey
+from opaque_keys.locations import SlashSeparatedCourseKey
 from xmodule.modulestore.exceptions import ItemNotFoundError
 from xmodule.html_module import HtmlDescriptor
-from xmodule.modulestore.keys import UsageKey
+from opaque_keys.keys import UsageKey
 from opaque_keys import InvalidKeyError
 from lms.lib.xblock.runtime import quote_slashes
 
@@ -80,7 +80,7 @@ from xblock.fields import ScopeIds
 from django.utils.translation import ugettext as _
 
 from microsite_configuration import microsite
-from xmodule.modulestore.locations import i4xEncoder
+from opaque_keys.locations import i4xEncoder
 
 log = logging.getLogger(__name__)
 

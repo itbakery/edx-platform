@@ -17,7 +17,7 @@ from django.utils.translation import ugettext as _
 import mongoengine
 
 from dashboard.models import CourseImportLog
-from xmodule.modulestore.keys import CourseKey
+from opaque_keys.keys import CourseKey
 
 log = logging.getLogger(__name__)
 
